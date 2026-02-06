@@ -1,0 +1,15 @@
+{{ template "chart.header" . }}
+
+{{ template "chart.description" . }}
+
+## Installation
+
+```bash
+helm repo add augmented-networkpolicy-operator oci://ghcr.io/ayoy
+helm install augmented-networkpolicy-operator augmented-networkpolicy-operator/augmented-networkpolicy-operator \
+  --namespace augmented-networkpolicy-operator-system --create-namespace
+```
+
+{{ template "chart.valuesSection" . }}
+
+{{ template "chart.maintainersSection" . }}

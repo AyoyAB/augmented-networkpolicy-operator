@@ -1,26 +1,40 @@
+# -- Number of controller replicas
 replicaCount: 1
 
 image:
+  # -- Container image repository
   repository: ghcr.io/ayoy/augmented-networkpolicy-operator
+  # -- Image pull policy
   pullPolicy: IfNotPresent
+  # -- Image tag (defaults to chart appVersion)
   tag: "latest"
 
+# -- Image pull secrets for private registries
 imagePullSecrets: []
+# -- Override the chart name
 nameOverride: ""
+# -- Override the full resource name
 fullnameOverride: ""
 
 serviceAccount:
+  # -- Create a ServiceAccount for the controller
   create: true
+  # -- Annotations to add to the ServiceAccount
   annotations: {}
+  # -- Override the ServiceAccount name (defaults to fullname)
   name: ""
 
 leaderElection:
+  # -- Enable leader election for high availability
   enabled: true
 
 metrics:
+  # -- Port for the Prometheus metrics endpoint
   port: 8080
+  # -- Serve metrics over HTTPS (set to true for production)
   secure: false
 
+# -- CPU/memory resource requests and limits
 resources:
   limits:
     cpu: 500m
@@ -29,6 +43,9 @@ resources:
     cpu: 10m
     memory: 64Mi
 
+# -- Node selector for pod scheduling
 nodeSelector: {}
+# -- Tolerations for pod scheduling
 tolerations: []
+# -- Affinity rules for pod scheduling
 affinity: {}

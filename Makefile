@@ -123,6 +123,19 @@ test-e2e: kind-load deploy chainsaw ## Run e2e tests with chainsaw against a Kin
 HELM_RELEASE_NAME ?= augmented-networkpolicy-operator
 HELM_NAMESPACE ?= augmented-networkpolicy-operator-system
 
+.PHONY: helm-docs
+helm-docs: ## Generate Helm chart documentation with helm-docs.
+	@command -v helm-docs >/dev/null 2>&1 || { \
+		if [ "$$(uname)" = "Darwin" ]; then \
+			echo "helm-docs not found, installing via brew..."; \
+			brew install norwoodj/tap/helm-docs; \
+		else \
+			echo "helm-docs not found. Install it from https://github.com/norwoodj/helm-docs"; \
+			exit 1; \
+		fi; \
+	}
+	helm-docs --chart-search-root charts/
+
 .PHONY: helm-install
 helm-install: ## Install the Helm chart.
 	helm upgrade --install $(HELM_RELEASE_NAME) charts/augmented-networkpolicy-operator \
