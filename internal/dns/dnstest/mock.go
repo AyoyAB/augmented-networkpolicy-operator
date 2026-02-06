@@ -1,8 +1,8 @@
-package dns
+package dnstest
 
 import "context"
 
-// MockResolver is a test double for the Resolver interface.
+// MockResolver is a test double for the dns.Resolver interface.
 type MockResolver struct {
 	Results map[string][]string
 	Err     error

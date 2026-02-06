@@ -34,7 +34,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	networkingv1alpha1 "github.com/ayoy/augmented-networkpolicy-operator/api/v1alpha1"
-	"github.com/ayoy/augmented-networkpolicy-operator/internal/dns"
+	"github.com/ayoy/augmented-networkpolicy-operator/internal/dns/dnstest"
 )
 
 var _ = Describe("NetworkPolicy Controller", func() {
@@ -59,7 +59,7 @@ var _ = Describe("NetworkPolicy Controller", func() {
 		reconciler = &NetworkPolicyReconciler{
 			Client: k8sClient,
 			Scheme: scheme.Scheme,
-			Resolver: &dns.MockResolver{
+			Resolver: &dnstest.MockResolver{
 				Results: map[string][]string{
 					"example.com":     {"93.184.216.34/32"},
 					"api.example.com": {"93.184.216.35/32", "93.184.216.36/32"},
