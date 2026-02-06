@@ -22,6 +22,8 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	"github.com/prometheus/client_golang/prometheus/testutil"
+
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -68,6 +70,8 @@ var _ = Describe("NetworkPolicy Controller", func() {
 
 	Context("when creating a NetworkPolicy", func() {
 		It("should create a standard NetworkPolicy with resolved IPs", func() {
+			creationsBefore := testutil.ToFloat64(networkPolicyCreations)
+
 			tcpProto := corev1.ProtocolTCP
 			port443 := intstr.FromInt32(443)
 			anp := &networkingv1alpha1.NetworkPolicy{
@@ -141,6 +145,9 @@ var _ = Describe("NetworkPolicy Controller", func() {
 			Expect(updatedANP.Status.Conditions).To(HaveLen(1))
 			Expect(updatedANP.Status.Conditions[0].Type).To(Equal(conditionTypeReady))
 			Expect(updatedANP.Status.Conditions[0].Status).To(Equal(metav1.ConditionTrue))
+
+			// Verify creation metric incremented
+			Expect(testutil.ToFloat64(networkPolicyCreations)).To(Equal(creationsBefore + 1))
 		})
 
 		It("should handle multiple peers in a single egress rule", func() {
@@ -188,6 +195,8 @@ var _ = Describe("NetworkPolicy Controller", func() {
 
 	Context("when updating a NetworkPolicy", func() {
 		It("should update the standard NetworkPolicy when spec changes", func() {
+			dnsChangesBefore := testutil.ToFloat64(dnsNameChanges)
+
 			tcpProto := corev1.ProtocolTCP
 			port443 := intstr.FromInt32(443)
 			anp := &networkingv1alpha1.NetworkPolicy{
@@ -241,11 +250,16 @@ var _ = Describe("NetworkPolicy Controller", func() {
 			}, &stdNP)).To(Succeed())
 
 			Expect(stdNP.Spec.Egress[0].Ports[0].Port.IntVal).To(Equal(int32(8443)))
+
+			// Verify dns change metric incremented
+			Expect(testutil.ToFloat64(dnsNameChanges)).To(Equal(dnsChangesBefore + 1))
 		})
 	})
 
 	Context("when a NetworkPolicy is deleted", func() {
 		It("should return without error for non-existent resources", func() {
+			deletionsBefore := testutil.ToFloat64(networkPolicyDeletions)
+
 			result, err := reconciler.Reconcile(ctx, reconcile.Request{
 				NamespacedName: types.NamespacedName{
 					Name:      "non-existent",
@@ -254,6 +268,9 @@ var _ = Describe("NetworkPolicy Controller", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(result).To(Equal(ctrl.Result{}))
+
+			// Verify deletion metric incremented
+			Expect(testutil.ToFloat64(networkPolicyDeletions)).To(Equal(deletionsBefore + 1))
 		})
 	})
 

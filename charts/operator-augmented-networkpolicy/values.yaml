@@ -17,6 +17,10 @@ serviceAccount:
 leaderElection:
   enabled: true
 
+metrics:
+  port: 8080
+  secure: false
+
 resources:
   limits:
     cpu: 500m

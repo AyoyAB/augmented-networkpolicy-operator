@@ -1,0 +1,64 @@
+apiVersion: chainsaw.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: metrics
+spec:
+  description: Verify Prometheus metrics are exposed and incremented
+  steps:
+    - name: create-augmented-networkpolicy
+      try:
+        - apply:
+            resource:
+              apiVersion: networking.ayoy.se/v1alpha1
+              kind: NetworkPolicy
+              metadata:
+                name: test-metrics
+              spec:
+                podSelector:
+                  matchLabels:
+                    app: web
+                policyTypes:
+                  - Egress
+                egress:
+                  - ports:
+                      - protocol: TCP
+                        port: 443
+                    to:
+                      - hostname: kubernetes.default.svc.cluster.local
+    - name: assert-standard-networkpolicy-created
+      try:
+        - assert:
+            resource:
+              apiVersion: networking.k8s.io/v1
+              kind: NetworkPolicy
+              metadata:
+                name: test-metrics
+    - name: assert-creation-metric
+      try:
+        - script:
+            content: |
+              kubectl run curl-metrics-create --image=curlimages/curl --rm -i --restart=Never --timeout=60s -- \
+                -s http://operator-augmented-networkpolicy-controller-manager-metrics.operator-augmented-networkpolicy-system.svc:8080/metrics \
+              | grep -E '^augmented_networkpolicy_creations_total [1-9]'
+    - name: delete-augmented-networkpolicy
+      try:
+        - delete:
+            ref:
+              apiVersion: networking.ayoy.se/v1alpha1
+              kind: NetworkPolicy
+              name: test-metrics
+    - name: assert-standard-networkpolicy-deleted
+      try:
+        - error:
+            resource:
+              apiVersion: networking.k8s.io/v1
+              kind: NetworkPolicy
+              metadata:
+                name: test-metrics
+    - name: assert-deletion-metric
+      try:
+        - script:
+            content: |
+              kubectl run curl-metrics-delete --image=curlimages/curl --rm -i --restart=Never --timeout=60s -- \
+                -s http://operator-augmented-networkpolicy-controller-manager-metrics.operator-augmented-networkpolicy-system.svc:8080/metrics \
+              | grep -E '^augmented_networkpolicy_deletions_total [1-9]'

@@ -62,6 +62,7 @@ func (r *NetworkPolicyReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	if err := r.Get(ctx, req.NamespacedName, &anp); err != nil {
 		if apierrors.IsNotFound(err) {
 			logger.Info("NetworkPolicy resource not found, likely deleted")
+			networkPolicyDeletions.Inc()
 			return ctrl.Result{}, nil
 		}
 		return ctrl.Result{}, fmt.Errorf("failed to get NetworkPolicy: %w", err)
@@ -135,6 +136,7 @@ func (r *NetworkPolicyReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			if err := r.Create(ctx, desired); err != nil {
 				return ctrl.Result{}, fmt.Errorf("failed to create NetworkPolicy: %w", err)
 			}
+			networkPolicyCreations.Inc()
 		} else {
 			return ctrl.Result{}, fmt.Errorf("failed to get existing NetworkPolicy: %w", err)
 		}
@@ -146,6 +148,7 @@ func (r *NetworkPolicyReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			if err := r.Update(ctx, existing); err != nil {
 				return ctrl.Result{}, fmt.Errorf("failed to update NetworkPolicy: %w", err)
 			}
+			dnsNameChanges.Inc()
 		}
 	}
 
