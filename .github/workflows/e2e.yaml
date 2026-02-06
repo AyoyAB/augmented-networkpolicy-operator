@@ -1,0 +1,61 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+
+      - name: Install Kind
+        run: |
+          go install sigs.k8s.io/kind@v0.24.0
+
+      - name: Create Kind cluster
+        run: kind create cluster --name e2e-test
+
+      - name: Generate manifests
+        run: |
+          make generate
+          make manifests
+
+      - name: Build and load image
+        run: |
+          make docker-build IMG=ghcr.io/ayoy/operator-augmented-networkpolicy:e2e
+          kind load docker-image ghcr.io/ayoy/operator-augmented-networkpolicy:e2e --name e2e-test
+
+      - name: Deploy operator
+        run: make deploy IMG=ghcr.io/ayoy/operator-augmented-networkpolicy:e2e
+
+      - name: Wait for operator to be ready
+        run: |
+          kubectl wait --for=condition=available --timeout=120s \
+            deployment/operator-augmented-networkpolicy-controller-manager \
+            -n operator-augmented-networkpolicy-system
+
+      - name: Install Chainsaw
+        run: make chainsaw
+
+      - name: Run e2e tests
+        run: ./bin/chainsaw test --test-dir ./e2e/ --config ./e2e/.chainsaw.yaml
+
+      - name: Collect logs on failure
+        if: failure()
+        run: |
+          kubectl logs -n operator-augmented-networkpolicy-system \
+            deployment/operator-augmented-networkpolicy-controller-manager \
+            --tail=100 || true
+
+      - name: Delete Kind cluster
+        if: always()
+        run: kind delete cluster --name e2e-test

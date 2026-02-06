@@ -1,0 +1,73 @@
+apiVersion: chainsaw.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: update-networkpolicy
+spec:
+  description: Verify updating an augmented NetworkPolicy updates the standard NetworkPolicy
+  steps:
+    - name: create-initial
+      try:
+        - apply:
+            resource:
+              apiVersion: networking.ayoy.se/v1alpha1
+              kind: NetworkPolicy
+              metadata:
+                name: test-update
+              spec:
+                podSelector:
+                  matchLabels:
+                    app: web
+                policyTypes:
+                  - Egress
+                egress:
+                  - ports:
+                      - protocol: TCP
+                        port: 443
+                    to:
+                      - hostname: kubernetes.default.svc.cluster.local
+    - name: assert-initial-created
+      try:
+        - assert:
+            resource:
+              apiVersion: networking.k8s.io/v1
+              kind: NetworkPolicy
+              metadata:
+                name: test-update
+              spec:
+                egress:
+                  - ports:
+                      - protocol: TCP
+                        port: 443
+    - name: update-port
+      try:
+        - apply:
+            resource:
+              apiVersion: networking.ayoy.se/v1alpha1
+              kind: NetworkPolicy
+              metadata:
+                name: test-update
+              spec:
+                podSelector:
+                  matchLabels:
+                    app: web
+                policyTypes:
+                  - Egress
+                egress:
+                  - ports:
+                      - protocol: TCP
+                        port: 8443
+                    to:
+                      - hostname: kubernetes.default.svc.cluster.local
+    - name: assert-updated
+      try:
+        - assert:
+            resource:
+              apiVersion: networking.k8s.io/v1
+              kind: NetworkPolicy
+              metadata:
+                name: test-update
+              spec:
+                egress:
+                  - ports:
+                      - protocol: TCP
+                        port: 8443

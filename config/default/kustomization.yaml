@@ -1,0 +1,8 @@
+namespace: operator-augmented-networkpolicy-system
+
+namePrefix: operator-augmented-networkpolicy-
+
+resources:
+- ../crd
+- ../rbac
+- ../manager

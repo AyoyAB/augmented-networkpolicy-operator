@@ -1,0 +1,2 @@
+resources:
+- bases/networking.ayoy.se_networkpolicies.yaml
