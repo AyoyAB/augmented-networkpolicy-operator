@@ -2,9 +2,9 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: {{ include "operator-augmented-networkpolicy.fullname" . }}-leader-election-role
+  name: {{ include "augmented-networkpolicy-operator.fullname" . }}-leader-election-role
   labels:
-    {{- include "operator-augmented-networkpolicy.labels" . | nindent 4 }}
+    {{- include "augmented-networkpolicy-operator.labels" . | nindent 4 }}
 rules:
   - apiGroups:
       - ""
@@ -41,15 +41,15 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ include "operator-augmented-networkpolicy.fullname" . }}-leader-election-rolebinding
+  name: {{ include "augmented-networkpolicy-operator.fullname" . }}-leader-election-rolebinding
   labels:
-    {{- include "operator-augmented-networkpolicy.labels" . | nindent 4 }}
+    {{- include "augmented-networkpolicy-operator.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: {{ include "operator-augmented-networkpolicy.fullname" . }}-leader-election-role
+  name: {{ include "augmented-networkpolicy-operator.fullname" . }}-leader-election-role
 subjects:
   - kind: ServiceAccount
-    name: {{ include "operator-augmented-networkpolicy.serviceAccountName" . }}
+    name: {{ include "augmented-networkpolicy-operator.serviceAccountName" . }}
     namespace: {{ .Release.Namespace }}
 {{- end }}

@@ -1,1 +1,1 @@
-# operator-augmented-networkpolicy
+# augmented-networkpolicy-operator

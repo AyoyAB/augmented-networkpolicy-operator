@@ -35,9 +35,9 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	networkingv1alpha1 "github.com/ayoy/operator-augmented-networkpolicy/api/v1alpha1"
-	"github.com/ayoy/operator-augmented-networkpolicy/internal/controller"
-	"github.com/ayoy/operator-augmented-networkpolicy/internal/dns"
+	networkingv1alpha1 "github.com/ayoy/augmented-networkpolicy-operator/api/v1alpha1"
+	"github.com/ayoy/augmented-networkpolicy-operator/internal/controller"
+	"github.com/ayoy/augmented-networkpolicy-operator/internal/dns"
 )
 
 var (

@@ -38,7 +38,7 @@ jobs:
 
       - name: Build and push image
         run: |
-          make docker-build IMG=ghcr.io/ayoy/operator-augmented-networkpolicy:${{ steps.version.outputs.VERSION }}
-          make docker-push IMG=ghcr.io/ayoy/operator-augmented-networkpolicy:${{ steps.version.outputs.VERSION }}
-          docker tag ghcr.io/ayoy/operator-augmented-networkpolicy:${{ steps.version.outputs.VERSION }} ghcr.io/ayoy/operator-augmented-networkpolicy:latest
-          make docker-push IMG=ghcr.io/ayoy/operator-augmented-networkpolicy:latest
+          make docker-build IMG=ghcr.io/ayoy/augmented-networkpolicy-operator:${{ steps.version.outputs.VERSION }}
+          make docker-push IMG=ghcr.io/ayoy/augmented-networkpolicy-operator:${{ steps.version.outputs.VERSION }}
+          docker tag ghcr.io/ayoy/augmented-networkpolicy-operator:${{ steps.version.outputs.VERSION }} ghcr.io/ayoy/augmented-networkpolicy-operator:latest
+          make docker-push IMG=ghcr.io/ayoy/augmented-networkpolicy-operator:latest

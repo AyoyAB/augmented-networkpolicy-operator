@@ -1,29 +1,29 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "operator-augmented-networkpolicy.fullname" . }}-controller-manager
+  name: {{ include "augmented-networkpolicy-operator.fullname" . }}-controller-manager
   labels:
     control-plane: controller-manager
-    {{- include "operator-augmented-networkpolicy.labels" . | nindent 4 }}
+    {{- include "augmented-networkpolicy-operator.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       control-plane: controller-manager
-      {{- include "operator-augmented-networkpolicy.selectorLabels" . | nindent 6 }}
+      {{- include "augmented-networkpolicy-operator.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: manager
       labels:
         control-plane: controller-manager
-        {{- include "operator-augmented-networkpolicy.selectorLabels" . | nindent 8 }}
+        {{- include "augmented-networkpolicy-operator.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "operator-augmented-networkpolicy.serviceAccountName" . }}
+      serviceAccountName: {{ include "augmented-networkpolicy-operator.serviceAccountName" . }}
       securityContext:
         runAsNonRoot: true
         seccompProfile:

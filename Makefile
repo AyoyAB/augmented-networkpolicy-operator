@@ -1,6 +1,6 @@
 
 # Image URL to use all building/pushing image targets
-IMG ?= ghcr.io/ayoy/operator-augmented-networkpolicy:latest
+IMG ?= ghcr.io/ayoy/augmented-networkpolicy-operator:latest
 
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.31.0
@@ -98,7 +98,7 @@ undeploy: kustomize ## Undeploy controller from the K8s cluster specified in ~/.
 
 ##@ Kind
 
-KIND_CLUSTER_NAME ?= operator-augmented-networkpolicy
+KIND_CLUSTER_NAME ?= augmented-networkpolicy-operator
 
 .PHONY: kind-create
 kind-create: ## Create a Kind cluster for development.
@@ -120,12 +120,12 @@ test-e2e: kind-load deploy chainsaw ## Run e2e tests with chainsaw against a Kin
 
 ##@ Helm
 
-HELM_RELEASE_NAME ?= operator-augmented-networkpolicy
-HELM_NAMESPACE ?= operator-augmented-networkpolicy-system
+HELM_RELEASE_NAME ?= augmented-networkpolicy-operator
+HELM_NAMESPACE ?= augmented-networkpolicy-operator-system
 
 .PHONY: helm-install
 helm-install: ## Install the Helm chart.
-	helm upgrade --install $(HELM_RELEASE_NAME) charts/operator-augmented-networkpolicy \
+	helm upgrade --install $(HELM_RELEASE_NAME) charts/augmented-networkpolicy-operator \
 		--namespace $(HELM_NAMESPACE) --create-namespace \
 		--set image.tag=$(shell echo ${IMG} | cut -d: -f2)
 

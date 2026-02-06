@@ -39,7 +39,7 @@ spec:
             timeout: 120s
             content: |
               kubectl run curl-metrics-create --image=curlimages/curl --restart=Never -- \
-                -sf http://operator-augmented-networkpolicy-controller-manager-metrics.operator-augmented-networkpolicy-system.svc:8080/metrics
+                -sf http://augmented-networkpolicy-operator-controller-manager-metrics.augmented-networkpolicy-operator-system.svc:8080/metrics
               kubectl wait --for=jsonpath='{.status.phase}'=Succeeded pod/curl-metrics-create --timeout=90s
               kubectl logs curl-metrics-create | grep -E '^augmented_networkpolicy_creations_total [1-9]'
               kubectl delete pod curl-metrics-create --ignore-not-found
@@ -64,7 +64,7 @@ spec:
             timeout: 120s
             content: |
               kubectl run curl-metrics-delete --image=curlimages/curl --restart=Never -- \
-                -sf http://operator-augmented-networkpolicy-controller-manager-metrics.operator-augmented-networkpolicy-system.svc:8080/metrics
+                -sf http://augmented-networkpolicy-operator-controller-manager-metrics.augmented-networkpolicy-operator-system.svc:8080/metrics
               kubectl wait --for=jsonpath='{.status.phase}'=Succeeded pod/curl-metrics-delete --timeout=90s
               kubectl logs curl-metrics-delete | grep -E '^augmented_networkpolicy_deletions_total [1-9]'
               kubectl delete pod curl-metrics-delete --ignore-not-found

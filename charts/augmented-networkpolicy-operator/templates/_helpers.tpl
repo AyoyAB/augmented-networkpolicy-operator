@@ -1,14 +1,14 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "operator-augmented-networkpolicy.name" -}}
+{{- define "augmented-networkpolicy-operator.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Create a default fully qualified app name.
 */}}
-{{- define "operator-augmented-networkpolicy.fullname" -}}
+{{- define "augmented-networkpolicy-operator.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -24,16 +24,16 @@ Create a default fully qualified app name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "operator-augmented-networkpolicy.chart" -}}
+{{- define "augmented-networkpolicy-operator.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "operator-augmented-networkpolicy.labels" -}}
-helm.sh/chart: {{ include "operator-augmented-networkpolicy.chart" . }}
-{{ include "operator-augmented-networkpolicy.selectorLabels" . }}
+{{- define "augmented-networkpolicy-operator.labels" -}}
+helm.sh/chart: {{ include "augmented-networkpolicy-operator.chart" . }}
+{{ include "augmented-networkpolicy-operator.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -43,17 +43,17 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "operator-augmented-networkpolicy.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "operator-augmented-networkpolicy.name" . }}
+{{- define "augmented-networkpolicy-operator.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "augmented-networkpolicy-operator.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "operator-augmented-networkpolicy.serviceAccountName" -}}
+{{- define "augmented-networkpolicy-operator.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "operator-augmented-networkpolicy.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "augmented-networkpolicy-operator.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}

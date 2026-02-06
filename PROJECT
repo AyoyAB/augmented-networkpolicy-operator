@@ -5,8 +5,8 @@
 domain: ayoy.se
 layout:
 - go.kubebuilder.io/v4
-projectName: operator-augmented-networkpolicy
-repo: github.com/ayoy/operator-augmented-networkpolicy
+projectName: augmented-networkpolicy-operator
+repo: github.com/ayoy/augmented-networkpolicy-operator
 resources:
 - api:
     crdVersion: v1
@@ -15,6 +15,6 @@ resources:
   domain: ayoy.se
   group: networking
   kind: NetworkPolicy
-  path: github.com/ayoy/operator-augmented-networkpolicy/api/v1alpha1
+  path: github.com/ayoy/augmented-networkpolicy-operator/api/v1alpha1
   version: v1alpha1
 version: "3"

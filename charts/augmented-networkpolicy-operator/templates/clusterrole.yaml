@@ -1,9 +1,9 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "operator-augmented-networkpolicy.fullname" . }}-manager-role
+  name: {{ include "augmented-networkpolicy-operator.fullname" . }}-manager-role
   labels:
-    {{- include "operator-augmented-networkpolicy.labels" . | nindent 4 }}
+    {{- include "augmented-networkpolicy-operator.labels" . | nindent 4 }}
 rules:
   - apiGroups:
       - ""

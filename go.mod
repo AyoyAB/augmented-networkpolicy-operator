@@ -1,4 +1,4 @@
-module github.com/ayoy/operator-augmented-networkpolicy
+module github.com/ayoy/augmented-networkpolicy-operator
 
 go 1.23.0
 

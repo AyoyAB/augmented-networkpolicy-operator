@@ -1,6 +1,6 @@
-namespace: operator-augmented-networkpolicy-system
+namespace: augmented-networkpolicy-operator-system
 
-namePrefix: operator-augmented-networkpolicy-
+namePrefix: augmented-networkpolicy-operator-
 
 resources:
 - ../crd

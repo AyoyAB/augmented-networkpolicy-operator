@@ -31,17 +31,17 @@ jobs:
 
       - name: Build and load image
         run: |
-          make docker-build IMG=ghcr.io/ayoy/operator-augmented-networkpolicy:e2e
-          kind load docker-image ghcr.io/ayoy/operator-augmented-networkpolicy:e2e --name e2e-test
+          make docker-build IMG=ghcr.io/ayoy/augmented-networkpolicy-operator:e2e
+          kind load docker-image ghcr.io/ayoy/augmented-networkpolicy-operator:e2e --name e2e-test
 
       - name: Deploy operator
-        run: make deploy IMG=ghcr.io/ayoy/operator-augmented-networkpolicy:e2e
+        run: make deploy IMG=ghcr.io/ayoy/augmented-networkpolicy-operator:e2e
 
       - name: Wait for operator to be ready
         run: |
           kubectl wait --for=condition=available --timeout=120s \
-            deployment/operator-augmented-networkpolicy-controller-manager \
-            -n operator-augmented-networkpolicy-system
+            deployment/augmented-networkpolicy-operator-controller-manager \
+            -n augmented-networkpolicy-operator-system
 
       - name: Install Chainsaw
         run: make chainsaw
@@ -52,8 +52,8 @@ jobs:
       - name: Collect logs on failure
         if: failure()
         run: |
-          kubectl logs -n operator-augmented-networkpolicy-system \
-            deployment/operator-augmented-networkpolicy-controller-manager \
+          kubectl logs -n augmented-networkpolicy-operator-system \
+            deployment/augmented-networkpolicy-operator-controller-manager \
             --tail=100 || true
 
       - name: Delete Kind cluster
