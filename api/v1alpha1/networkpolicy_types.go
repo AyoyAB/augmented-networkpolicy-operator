@@ -41,6 +41,9 @@ type NetworkPolicyPort struct {
 // EgressPeer describes a peer to allow traffic to.
 type EgressPeer struct {
 	// Hostname is the DNS name to resolve to IP addresses for this peer.
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=253
+	// +kubebuilder:validation:Pattern=`^[a-zA-Z0-9]([a-zA-Z0-9\-\.]*[a-zA-Z0-9])?$`
 	Hostname string `json:"hostname"`
 }
 
