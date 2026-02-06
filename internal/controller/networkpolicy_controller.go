@@ -37,6 +37,7 @@ import (
 
 const (
 	defaultResolutionInterval = 5 * time.Minute
+	minResolutionInterval     = 30 * time.Second
 	conditionTypeReady        = "Ready"
 )
 
@@ -180,6 +181,10 @@ func (r *NetworkPolicyReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	interval := defaultResolutionInterval
 	if anp.Spec.ResolutionInterval != nil {
 		interval = anp.Spec.ResolutionInterval.Duration
+	}
+	if interval < minResolutionInterval {
+		logger.Info("resolutionInterval too low, using minimum", "requested", interval, "minimum", minResolutionInterval)
+		interval = minResolutionInterval
 	}
 
 	return ctrl.Result{RequeueAfter: interval}, nil
