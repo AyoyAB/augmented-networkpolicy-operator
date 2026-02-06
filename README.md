@@ -98,7 +98,7 @@ The operator exposes Prometheus metrics on the metrics endpoint (default `:8080`
 
 ### Prerequisites
 
-- Go 1.23+
+- Go 1.25+
 - Docker
 - [Kind](https://kind.sigs.k8s.io/) (for local testing)
 
