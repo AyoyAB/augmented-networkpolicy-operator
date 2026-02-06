@@ -73,6 +73,10 @@ spec:
                           protocol:
                             description: Protocol is the protocol (TCP, UDP, or SCTP)
                               which traffic must match.
+                            enum:
+                            - TCP
+                            - UDP
+                            - SCTP
                             type: string
                         type: object
                       type: array

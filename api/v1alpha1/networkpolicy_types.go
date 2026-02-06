@@ -27,6 +27,7 @@ import (
 type NetworkPolicyPort struct {
 	// Protocol is the protocol (TCP, UDP, or SCTP) which traffic must match.
 	// +optional
+	// +kubebuilder:validation:Enum=TCP;UDP;SCTP
 	Protocol *corev1.Protocol `json:"protocol,omitempty"`
 
 	// Port is the port on the given protocol.
