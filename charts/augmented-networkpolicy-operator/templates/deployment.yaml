@@ -49,9 +49,6 @@ spec:
             {{- if .Values.ipFilter.whitelist }}
             - --ip-whitelist={{ join "," .Values.ipFilter.whitelist }}
             {{- end }}
-            {{- if .Values.ipFilter.autoDetectPodCIDR }}
-            - --auto-detect-pod-cidr
-            {{- end }}
           ports:
             - containerPort: {{ .Values.metrics.port }}
               name: metrics

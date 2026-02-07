@@ -73,7 +73,7 @@ type NetworkPolicySpec struct {
 	PolicyTypes []networkingv1.PolicyType `json:"policyTypes,omitempty"`
 
 	// ResolutionInterval is how often to re-resolve DNS hostnames.
-	// Defaults to 5 minutes.
+	// Defaults to 5 minutes. Minimum: 1 minute.
 	// +optional
 	ResolutionInterval *metav1.Duration `json:"resolutionInterval,omitempty"`
 }

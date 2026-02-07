@@ -44,8 +44,6 @@ ipFilter:
     - "127.0.0.0/8"
   # -- CIDRs to allow (when set, only matching IPs pass; blacklist still takes precedence)
   whitelist: []
-  # -- Auto-detect and blacklist pod network CIDRs from node specs
-  autoDetectPodCIDR: false
 
 # -- CPU/memory resource requests and limits
 resources:

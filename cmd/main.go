@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-based authentication works
@@ -78,7 +77,6 @@ func main() {
 	var enableHTTP2 bool
 	var ipBlacklist stringSliceFlag
 	var ipWhitelist stringSliceFlag
-	var autoDetectPodCIDR bool
 	var blacklistSet bool
 
 	flag.StringVar(&metricsAddr, "metrics-bind-address", "0", "The address the metrics endpoint binds to. "+
@@ -97,9 +95,6 @@ func main() {
 	flag.Var(&ipWhitelist, "ip-whitelist",
 		"CIDRs to allow (comma-separated, repeatable). "+
 			"When set, only matching IPs pass (unless also blacklisted).")
-	flag.BoolVar(&autoDetectPodCIDR, "auto-detect-pod-cidr", false,
-		"Auto-detect and blacklist pod network CIDRs from node specs")
-
 	opts := zap.Options{
 		Development: true,
 	}
@@ -158,7 +153,6 @@ func main() {
 	setupLog.Info("IP filter configured",
 		"blacklist", fmt.Sprintf("%v", []string(ipBlacklist)),
 		"whitelist", fmt.Sprintf("%v", []string(ipWhitelist)),
-		"autoDetectPodCIDR", autoDetectPodCIDR,
 	)
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
@@ -171,19 +165,6 @@ func main() {
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
-	}
-
-	if autoDetectPodCIDR {
-		provider := &dns.PodCIDRProvider{
-			Client:   mgr.GetClient(),
-			Filter:   ipFilter,
-			Logger:   ctrl.Log.WithName("pod-cidr-provider"),
-			Interval: 5 * time.Minute,
-		}
-		if err := mgr.Add(provider); err != nil {
-			setupLog.Error(err, "unable to add pod CIDR provider")
-			os.Exit(1)
-		}
 	}
 
 	if err = (&controller.NetworkPolicyReconciler{

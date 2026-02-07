@@ -37,7 +37,7 @@ import (
 
 const (
 	defaultResolutionInterval = 5 * time.Minute
-	minResolutionInterval     = 30 * time.Second
+	minResolutionInterval     = 1 * time.Minute
 	conditionTypeReady        = "Ready"
 )
 
@@ -53,7 +53,6 @@ type NetworkPolicyReconciler struct {
 // +kubebuilder:rbac:groups=networking.ayoy.se,resources=networkpolicies/finalizers,verbs=update
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=networkpolicies,verbs=get;list;watch;create;update
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
-// +kubebuilder:rbac:groups="",resources=nodes,verbs=get;list;watch
 
 // Reconcile handles reconciliation of NetworkPolicy custom resources.
 func (r *NetworkPolicyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {

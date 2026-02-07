@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/go-logr/logr"
+	"github.com/prometheus/client_golang/prometheus"
+	dto "github.com/prometheus/client_model/go"
 )
 
 func TestIPFilter_IsAllowed(t *testing.T) {
@@ -106,43 +108,6 @@ func TestIPFilter_IsAllowed(t *testing.T) {
 				t.Errorf("IsAllowed(%q) = %v, want %v", tt.cidr, got, tt.want)
 			}
 		})
-	}
-}
-
-func TestIPFilter_DynamicBlacklist(t *testing.T) {
-	f, err := NewIPFilter(nil, nil)
-	if err != nil {
-		t.Fatalf("NewIPFilter() error: %v", err)
-	}
-
-	// Initially allowed
-	if !f.IsAllowed("10.244.0.5/32") {
-		t.Fatal("expected 10.244.0.5/32 to be allowed before dynamic blacklist")
-	}
-
-	// Set dynamic blacklist
-	if err := f.SetDynamicBlacklist([]string{"10.244.0.0/16"}); err != nil {
-		t.Fatalf("SetDynamicBlacklist() error: %v", err)
-	}
-
-	// Now blocked
-	if f.IsAllowed("10.244.0.5/32") {
-		t.Fatal("expected 10.244.0.5/32 to be blocked after dynamic blacklist")
-	}
-
-	// Non-matching still allowed
-	if !f.IsAllowed("8.8.8.8/32") {
-		t.Fatal("expected 8.8.8.8/32 to still be allowed")
-	}
-
-	// Clear dynamic blacklist
-	if err := f.SetDynamicBlacklist(nil); err != nil {
-		t.Fatalf("SetDynamicBlacklist(nil) error: %v", err)
-	}
-
-	// Allowed again
-	if !f.IsAllowed("10.244.0.5/32") {
-		t.Fatal("expected 10.244.0.5/32 to be allowed after clearing dynamic blacklist")
 	}
 }
 
@@ -250,5 +215,63 @@ func TestFilteringResolver_WithWhitelist(t *testing.T) {
 	}
 	if cidrs[0] != expected[0] {
 		t.Errorf("Resolve()[0] = %q, want %q", cidrs[0], expected[0])
+	}
+}
+
+func getCounterValue(c prometheus.Counter) float64 {
+	var m dto.Metric
+	if err := c.Write(&m); err != nil {
+		return 0
+	}
+	return m.GetCounter().GetValue()
+}
+
+func TestFilteringResolver_DNSChangeDetection(t *testing.T) {
+	inner := &stubResolver{
+		results: map[string][]string{
+			"example.com": {"1.2.3.4/32"},
+		},
+	}
+
+	f, err := NewIPFilter(nil, nil)
+	if err != nil {
+		t.Fatalf("NewIPFilter() error: %v", err)
+	}
+
+	r := &FilteringResolver{
+		Inner:  inner,
+		Filter: f,
+		Logger: logr.Discard(),
+	}
+
+	// First resolution — establishes baseline, no change expected
+	_, err = r.Resolve(context.Background(), "example.com")
+	if err != nil {
+		t.Fatalf("Resolve() error: %v", err)
+	}
+
+	before := getCounterValue(dnsResolutionChangesTotal.WithLabelValues("example.com"))
+
+	// Second resolution with same results — no increment
+	_, err = r.Resolve(context.Background(), "example.com")
+	if err != nil {
+		t.Fatalf("Resolve() error: %v", err)
+	}
+
+	after := getCounterValue(dnsResolutionChangesTotal.WithLabelValues("example.com"))
+	if after != before {
+		t.Errorf("expected no metric increment for same results, got %v → %v", before, after)
+	}
+
+	// Third resolution with different results — should increment
+	inner.results["example.com"] = []string{"5.6.7.8/32"}
+	_, err = r.Resolve(context.Background(), "example.com")
+	if err != nil {
+		t.Fatalf("Resolve() error: %v", err)
+	}
+
+	afterChange := getCounterValue(dnsResolutionChangesTotal.WithLabelValues("example.com"))
+	if afterChange != after+1 {
+		t.Errorf("expected metric increment after DNS change, got %v → %v", after, afterChange)
 	}
 }
