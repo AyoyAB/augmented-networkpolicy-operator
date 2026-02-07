@@ -17,12 +17,8 @@ rules:
     resources:
       - networkpolicies
     verbs:
-      - create
-      - delete
       - get
       - list
-      - patch
-      - update
       - watch
   - apiGroups:
       - networking.ayoy.se
@@ -44,9 +40,7 @@ rules:
       - networkpolicies
     verbs:
       - create
-      - delete
       - get
       - list
-      - patch
       - update
       - watch

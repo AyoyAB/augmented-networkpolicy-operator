@@ -14,6 +14,14 @@ rules:
 - apiGroups:
   - networking.ayoy.se
   resources:
+  - networkpolicies
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - networking.ayoy.se
+  resources:
   - networkpolicies/finalizers
   verbs:
   - update
@@ -26,15 +34,12 @@ rules:
   - patch
   - update
 - apiGroups:
-  - networking.ayoy.se
   - networking.k8s.io
   resources:
   - networkpolicies
   verbs:
   - create
-  - delete
   - get
   - list
-  - patch
   - update
   - watch

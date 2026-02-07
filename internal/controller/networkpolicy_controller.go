@@ -48,10 +48,10 @@ type NetworkPolicyReconciler struct {
 	Resolver dns.Resolver
 }
 
-// +kubebuilder:rbac:groups=networking.ayoy.se,resources=networkpolicies,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=networking.ayoy.se,resources=networkpolicies,verbs=get;list;watch
 // +kubebuilder:rbac:groups=networking.ayoy.se,resources=networkpolicies/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=networking.ayoy.se,resources=networkpolicies/finalizers,verbs=update
-// +kubebuilder:rbac:groups=networking.k8s.io,resources=networkpolicies,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=networking.k8s.io,resources=networkpolicies,verbs=get;list;watch;create;update
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 
 // Reconcile handles reconciliation of NetworkPolicy custom resources.
