@@ -20,9 +20,12 @@ helm install augmented-networkpolicy-operator augmented-networkpolicy-operator/a
 | image.repository | string | `"ghcr.io/ayoy/augmented-networkpolicy-operator"` | Container image repository |
 | image.tag | string | `"latest"` | Image tag (defaults to chart appVersion) |
 | imagePullSecrets | list | `[]` | Image pull secrets for private registries |
+| ipFilter.blacklist | list | `["169.254.169.254/32","127.0.0.0/8"]` | CIDRs to block from resolved IPs |
+| ipFilter.whitelist | list | `[]` | CIDRs to allow (when set, only matching IPs pass; blacklist still takes precedence) |
 | leaderElection.enabled | bool | `true` | Enable leader election for high availability |
-| metrics.port | int | `8080` | Port for the Prometheus metrics endpoint |
-| metrics.secure | bool | `false` | Serve metrics over HTTPS (set to true for production) |
+| metrics.port | int | `8443` | Port for the Prometheus metrics endpoint |
+| metrics.prometheusRule.enabled | bool | `false` | Create PrometheusRule resource for alerting on blocked IPs |
+| metrics.secure | bool | `true` | Serve metrics over HTTPS |
 | nameOverride | string | `""` | Override the chart name |
 | nodeSelector | object | `{}` | Node selector for pod scheduling |
 | replicaCount | int | `1` | Number of controller replicas |
