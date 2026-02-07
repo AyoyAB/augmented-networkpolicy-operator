@@ -44,7 +44,7 @@ type EgressPeer struct {
 	// Hostname is the DNS name to resolve to IP addresses for this peer.
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:MaxLength=253
-	// +kubebuilder:validation:Pattern=`^[a-zA-Z0-9]([a-zA-Z0-9\-\.]*[a-zA-Z0-9])?$`
+	// +kubebuilder:validation:Pattern=`^[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?)*$`
 	Hostname string `json:"hostname"`
 }
 
@@ -56,6 +56,7 @@ type EgressRule struct {
 
 	// To is a list of destinations for outgoing traffic specified by hostname.
 	// +optional
+	// +kubebuilder:validation:MaxItems=10
 	To []EgressPeer `json:"to,omitempty"`
 }
 
@@ -66,6 +67,7 @@ type NetworkPolicySpec struct {
 
 	// Egress is a list of egress rules to be applied to the selected pods.
 	// +optional
+	// +kubebuilder:validation:MaxItems=10
 	Egress []EgressRule `json:"egress,omitempty"`
 
 	// PolicyTypes describes which types of policy this applies to.
@@ -75,6 +77,7 @@ type NetworkPolicySpec struct {
 	// ResolutionInterval is how often to re-resolve DNS hostnames.
 	// Defaults to 5 minutes. Minimum: 1 minute.
 	// +optional
+	// +kubebuilder:validation:XValidation:rule="duration(self) >= duration('1m')",message="resolutionInterval must be at least 1 minute"
 	ResolutionInterval *metav1.Duration `json:"resolutionInterval,omitempty"`
 }
 

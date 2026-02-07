@@ -62,7 +62,7 @@ spec:
 | `spec.policyTypes` | `[]PolicyType` | `Egress` (only egress is supported) |
 | `spec.egress[].to[].hostname` | `string` | DNS hostname to resolve |
 | `spec.egress[].ports[]` | `NetworkPolicyPort` | Standard port/protocol definitions |
-| `spec.resolutionInterval` | `Duration` | DNS re-resolution interval (default `5m`, minimum `30s`) |
+| `spec.resolutionInterval` | `Duration` | DNS re-resolution interval (default `5m`, minimum `1m`) |
 | `status.conditions` | `[]Condition` | `Ready` condition with resolution status |
 | `status.resolvedAddresses` | `map[string][]string` | Hostname to resolved CIDRs |
 
@@ -114,11 +114,11 @@ spec:
 
 The CRD schema enforces that hostnames must:
 - Be between 1 and 253 characters
-- Match the pattern `^[a-zA-Z0-9]([a-zA-Z0-9\-\.]*[a-zA-Z0-9])?$`
+- Match RFC 1123 DNS hostname format (labels separated by dots, alphanumeric with hyphens)
 
 ### Resolution interval
 
-The minimum resolution interval is clamped to 30 seconds to prevent excessive DNS lookups. Values below this floor are silently raised.
+The minimum resolution interval is 1 minute, enforced both at the CRD schema level and at runtime. Values below this floor are rejected by the API server.
 
 ## Development
 

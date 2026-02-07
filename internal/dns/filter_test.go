@@ -85,15 +85,15 @@ func TestIPFilter_IsAllowed(t *testing.T) {
 			want:      false,
 		},
 		{
-			name: "invalid CIDR fails open",
+			name: "invalid CIDR fails closed",
 			cidr: "not-a-cidr",
-			want: true,
+			want: false,
 		},
 		{
-			name:      "invalid CIDR fails open even with blacklist",
+			name:      "invalid CIDR fails closed even with blacklist",
 			blacklist: []string{"0.0.0.0/0"},
 			cidr:      "not-a-cidr",
-			want:      true,
+			want:      false,
 		},
 	}
 

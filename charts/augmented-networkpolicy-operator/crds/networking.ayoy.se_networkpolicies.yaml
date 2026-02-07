@@ -92,13 +92,15 @@ spec:
                               addresses for this peer.
                             maxLength: 253
                             minLength: 1
-                            pattern: ^[a-zA-Z0-9]([a-zA-Z0-9\-\.]*[a-zA-Z0-9])?$
+                            pattern: ^[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?)*$
                             type: string
                         required:
                         - hostname
                         type: object
+                      maxItems: 10
                       type: array
                   type: object
+                maxItems: 10
                 type: array
               podSelector:
                 description: PodSelector selects the pods to which this NetworkPolicy
@@ -161,6 +163,9 @@ spec:
                   ResolutionInterval is how often to re-resolve DNS hostnames.
                   Defaults to 5 minutes. Minimum: 1 minute.
                 type: string
+                x-kubernetes-validations:
+                - message: resolutionInterval must be at least 1 minute
+                  rule: duration(self) >= duration('1m')
             required:
             - podSelector
             type: object

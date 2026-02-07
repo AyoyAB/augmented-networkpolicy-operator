@@ -58,8 +58,8 @@ func NewIPFilter(whitelist, blacklist []string) (*IPFilter, error) {
 func (f *IPFilter) IsAllowed(cidr string) bool {
 	ip, _, err := net.ParseCIDR(cidr)
 	if err != nil {
-		// Fail-open for unparseable CIDRs
-		return true
+		// Fail-closed for unparseable CIDRs
+		return false
 	}
 
 	// Check blacklist
