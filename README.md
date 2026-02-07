@@ -62,7 +62,7 @@ spec:
 | `spec.policyTypes` | `[]PolicyType` | `Egress` (only egress is supported) |
 | `spec.egress[].to[].hostname` | `string` | DNS hostname to resolve |
 | `spec.egress[].ports[]` | `NetworkPolicyPort` | Standard port/protocol definitions |
-| `spec.resolutionInterval` | `Duration` | DNS re-resolution interval (default `5m`) |
+| `spec.resolutionInterval` | `Duration` | DNS re-resolution interval (default `5m`, minimum `30s`) |
 | `status.conditions` | `[]Condition` | `Ready` condition with resolution status |
 | `status.resolvedAddresses` | `map[string][]string` | Hostname to resolved CIDRs |
 
@@ -86,13 +86,39 @@ kubectl apply -k config/default
 
 ## Metrics
 
-The operator exposes Prometheus metrics on the metrics endpoint (default `:8080`):
+The operator exposes Prometheus metrics on the metrics endpoint (default `:8443`, HTTPS):
 
 | Metric | Type | Description |
 |---|---|---|
 | `augmented_networkpolicy_creations_total` | Counter | Standard NetworkPolicies created |
 | `augmented_networkpolicy_deletions_total` | Counter | Custom NetworkPolicies detected as deleted |
 | `augmented_networkpolicy_dns_changes_total` | Counter | Standard NetworkPolicy updates due to DNS changes |
+
+## Security considerations
+
+### Rate limiting with ResourceQuota
+
+Each augmented NetworkPolicy triggers DNS resolution for every hostname in its egress rules. In multi-tenant clusters, a user could create many resources with many hostnames, causing a burst of DNS queries. Use Kubernetes `ResourceQuota` to limit the number of custom resources per namespace:
+
+```yaml
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: networkpolicy-quota
+spec:
+  hard:
+    count/networkpolicies.networking.ayoy.se: "10"
+```
+
+### Hostname validation
+
+The CRD schema enforces that hostnames must:
+- Be between 1 and 253 characters
+- Match the pattern `^[a-zA-Z0-9]([a-zA-Z0-9\-\.]*[a-zA-Z0-9])?$`
+
+### Resolution interval
+
+The minimum resolution interval is clamped to 30 seconds to prevent excessive DNS lookups. Values below this floor are silently raised.
 
 ## Development
 
