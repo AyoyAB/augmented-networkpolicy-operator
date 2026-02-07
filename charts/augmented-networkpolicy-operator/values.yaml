@@ -30,9 +30,9 @@ leaderElection:
 
 metrics:
   # -- Port for the Prometheus metrics endpoint
-  port: 8080
-  # -- Serve metrics over HTTPS (set to true for production)
-  secure: false
+  port: 8443
+  # -- Serve metrics over HTTPS
+  secure: true
 
 # -- CPU/memory resource requests and limits
 resources:
