@@ -43,6 +43,15 @@ spec:
             {{- if not .Values.metrics.secure }}
             - --metrics-secure=false
             {{- end }}
+            {{- if .Values.ipFilter.blacklist }}
+            - --ip-blacklist={{ join "," .Values.ipFilter.blacklist }}
+            {{- end }}
+            {{- if .Values.ipFilter.whitelist }}
+            - --ip-whitelist={{ join "," .Values.ipFilter.whitelist }}
+            {{- end }}
+            {{- if .Values.ipFilter.autoDetectPodCIDR }}
+            - --auto-detect-pod-cidr
+            {{- end }}
           ports:
             - containerPort: {{ .Values.metrics.port }}
               name: metrics

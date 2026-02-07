@@ -33,6 +33,19 @@ metrics:
   port: 8443
   # -- Serve metrics over HTTPS
   secure: true
+  prometheusRule:
+    # -- Create PrometheusRule resource for alerting on blocked IPs
+    enabled: false
+
+ipFilter:
+  # -- CIDRs to block from resolved IPs
+  blacklist:
+    - "169.254.169.254/32"
+    - "127.0.0.0/8"
+  # -- CIDRs to allow (when set, only matching IPs pass; blacklist still takes precedence)
+  whitelist: []
+  # -- Auto-detect and blacklist pod network CIDRs from node specs
+  autoDetectPodCIDR: false
 
 # -- CPU/memory resource requests and limits
 resources:

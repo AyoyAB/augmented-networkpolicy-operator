@@ -1,0 +1,28 @@
+{{- if .Values.metrics.prometheusRule.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "augmented-networkpolicy-operator.fullname" . }}
+  labels:
+    {{- include "augmented-networkpolicy-operator.labels" . | nindent 4 }}
+spec:
+  groups:
+    - name: augmented-networkpolicy-operator
+      rules:
+        - alert: AugmentedNetworkPolicyIPBlocked
+          expr: rate(augmented_networkpolicy_ip_filtered_total[5m]) > 0
+          for: 1m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Resolved IP addresses are being blocked by IP filter"
+            description: "The operator is filtering out resolved IP addresses for hostname {{ "{{" }} $labels.hostname {{ "}}" }} ({{ "{{" }} $labels.cidr {{ "}}" }}). This may indicate DNS rebinding or misconfigured blacklist/whitelist."
+        - alert: AugmentedNetworkPolicyIPBlockedHigh
+          expr: rate(augmented_networkpolicy_ip_filtered_total[5m]) > 1
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "High rate of resolved IPs being blocked"
+            description: "Sustained high rate of IP filtering for hostname {{ "{{" }} $labels.hostname {{ "}}" }}. Possible DNS rebinding attack or significant DNS change."
+{{- end }}

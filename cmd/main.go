@@ -19,7 +19,10 @@ package main
 import (
 	"crypto/tls"
 	"flag"
+	"fmt"
 	"os"
+	"strings"
+	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-based authentication works
@@ -50,12 +53,33 @@ func init() {
 	utilruntime.Must(networkingv1.AddToScheme(scheme))
 }
 
+// stringSliceFlag implements flag.Value for comma-separated string slices.
+type stringSliceFlag []string
+
+func (s *stringSliceFlag) String() string {
+	return strings.Join(*s, ",")
+}
+
+func (s *stringSliceFlag) Set(val string) error {
+	for _, v := range strings.Split(val, ",") {
+		v = strings.TrimSpace(v)
+		if v != "" {
+			*s = append(*s, v)
+		}
+	}
+	return nil
+}
+
 func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
 	var secureMetrics bool
 	var enableHTTP2 bool
+	var ipBlacklist stringSliceFlag
+	var ipWhitelist stringSliceFlag
+	var autoDetectPodCIDR bool
+	var blacklistSet bool
 
 	flag.StringVar(&metricsAddr, "metrics-bind-address", "0", "The address the metrics endpoint binds to. "+
 		"Use :8443 for HTTPS or :8080 for HTTP, or leave as 0 to disable metrics.")
@@ -67,12 +91,32 @@ func main() {
 		"If set, the metrics endpoint is served securely via HTTPS. Use --metrics-secure=false to use HTTP instead.")
 	flag.BoolVar(&enableHTTP2, "enable-http2", false,
 		"If set, HTTP/2 will be enabled for the metrics server")
+	flag.Var(&ipBlacklist, "ip-blacklist",
+		"CIDRs to block from resolved IPs (comma-separated, repeatable). "+
+			"Default: 169.254.169.254/32,127.0.0.0/8")
+	flag.Var(&ipWhitelist, "ip-whitelist",
+		"CIDRs to allow (comma-separated, repeatable). "+
+			"When set, only matching IPs pass (unless also blacklisted).")
+	flag.BoolVar(&autoDetectPodCIDR, "auto-detect-pod-cidr", false,
+		"Auto-detect and blacklist pod network CIDRs from node specs")
 
 	opts := zap.Options{
 		Development: true,
 	}
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
+
+	// Check if --ip-blacklist was explicitly provided
+	flag.Visit(func(f *flag.Flag) {
+		if f.Name == "ip-blacklist" {
+			blacklistSet = true
+		}
+	})
+
+	// Apply default blacklist if not explicitly provided
+	if !blacklistSet {
+		ipBlacklist = stringSliceFlag{"169.254.169.254/32", "127.0.0.0/8"}
+	}
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
@@ -98,6 +142,25 @@ func main() {
 		TLSOpts:       tlsOpts,
 	}
 
+	// Set up IP filter
+	ipFilter, err := dns.NewIPFilter([]string(ipWhitelist), []string(ipBlacklist))
+	if err != nil {
+		setupLog.Error(err, "invalid IP filter configuration")
+		os.Exit(1)
+	}
+
+	var resolver dns.Resolver = &dns.FilteringResolver{
+		Inner:  dns.NewNetResolver(),
+		Filter: ipFilter,
+		Logger: ctrl.Log.WithName("ip-filter"),
+	}
+
+	setupLog.Info("IP filter configured",
+		"blacklist", fmt.Sprintf("%v", []string(ipBlacklist)),
+		"whitelist", fmt.Sprintf("%v", []string(ipWhitelist)),
+		"autoDetectPodCIDR", autoDetectPodCIDR,
+	)
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		Metrics:                metricsOptions,
@@ -110,10 +173,23 @@ func main() {
 		os.Exit(1)
 	}
 
+	if autoDetectPodCIDR {
+		provider := &dns.PodCIDRProvider{
+			Client:   mgr.GetClient(),
+			Filter:   ipFilter,
+			Logger:   ctrl.Log.WithName("pod-cidr-provider"),
+			Interval: 5 * time.Minute,
+		}
+		if err := mgr.Add(provider); err != nil {
+			setupLog.Error(err, "unable to add pod CIDR provider")
+			os.Exit(1)
+		}
+	}
+
 	if err = (&controller.NetworkPolicyReconciler{
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
-		Resolver: dns.NewNetResolver(),
+		Resolver: resolver,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NetworkPolicy")
 		os.Exit(1)
