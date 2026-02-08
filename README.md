@@ -72,7 +72,7 @@ spec:
 
 ```bash
 helm install augmented-networkpolicy-operator \
-  oci://ghcr.io/ayoy/augmented-networkpolicy-operator \
+  oci://ghcr.io/ayoyab/augmented-networkpolicy-operator \
   --namespace augmented-networkpolicy-operator-system --create-namespace
 ```
 

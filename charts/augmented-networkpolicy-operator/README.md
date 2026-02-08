@@ -17,7 +17,7 @@ helm install augmented-networkpolicy-operator augmented-networkpolicy-operator/a
 | affinity | object | `{}` | Affinity rules for pod scheduling |
 | fullnameOverride | string | `""` | Override the full resource name |
 | image.pullPolicy | string | `"IfNotPresent"` | Image pull policy |
-| image.repository | string | `"ghcr.io/ayoy/augmented-networkpolicy-operator"` | Container image repository |
+| image.repository | string | `"ghcr.io/ayoyab/augmented-networkpolicy-operator"` | Container image repository |
 | image.tag | string | `"latest"` | Image tag (defaults to chart appVersion) |
 | imagePullSecrets | list | `[]` | Image pull secrets for private registries |
 | ipFilter.blacklist | list | `["169.254.169.254/32","127.0.0.0/8"]` | CIDRs to block from resolved IPs |

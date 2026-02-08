@@ -3,7 +3,7 @@ replicaCount: 1
 
 image:
   # -- Container image repository
-  repository: ghcr.io/ayoy/augmented-networkpolicy-operator
+  repository: ghcr.io/ayoyab/augmented-networkpolicy-operator
   # -- Image pull policy
   pullPolicy: IfNotPresent
   # -- Image tag (defaults to chart appVersion)
