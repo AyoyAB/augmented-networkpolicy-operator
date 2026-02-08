@@ -20,7 +20,7 @@ COPY internal/ internal/
 # the GOARCH has not a default value to allow the binary be built according to the host where the command
 # having the GOARCH://GOOS://GOARM://GOAMD64 variables. This is important because the build container
 # might be a different architecture than the target one.
-RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -o manager cmd/main.go
+RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -o manager cmd/main.go
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
