@@ -31,8 +31,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	networkingv1alpha1 "github.com/ayoy/augmented-networkpolicy-operator/api/v1alpha1"
-	"github.com/ayoy/augmented-networkpolicy-operator/internal/dns"
+	networkingv1alpha1 "github.com/AyoyAB/augmented-networkpolicy-operator/api/v1alpha1"
+	"github.com/AyoyAB/augmented-networkpolicy-operator/internal/dns"
 )
 
 const (

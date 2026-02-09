@@ -33,8 +33,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	networkingv1alpha1 "github.com/ayoy/augmented-networkpolicy-operator/api/v1alpha1"
-	"github.com/ayoy/augmented-networkpolicy-operator/internal/dns/dnstest"
+	networkingv1alpha1 "github.com/AyoyAB/augmented-networkpolicy-operator/api/v1alpha1"
+	"github.com/AyoyAB/augmented-networkpolicy-operator/internal/dns/dnstest"
 )
 
 var _ = Describe("NetworkPolicy Controller", func() {

@@ -36,9 +36,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
-	networkingv1alpha1 "github.com/ayoy/augmented-networkpolicy-operator/api/v1alpha1"
-	"github.com/ayoy/augmented-networkpolicy-operator/internal/controller"
-	"github.com/ayoy/augmented-networkpolicy-operator/internal/dns"
+	networkingv1alpha1 "github.com/AyoyAB/augmented-networkpolicy-operator/api/v1alpha1"
+	"github.com/AyoyAB/augmented-networkpolicy-operator/internal/controller"
+	"github.com/AyoyAB/augmented-networkpolicy-operator/internal/dns"
 )
 
 var (
