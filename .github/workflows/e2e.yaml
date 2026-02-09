@@ -54,11 +54,8 @@ jobs:
             deployment/augmented-networkpolicy-operator-controller-manager \
             -n augmented-networkpolicy-operator-system
 
-      - name: Install Chainsaw
-        run: make chainsaw
-
       - name: Run e2e tests
-        run: ./bin/chainsaw test --test-dir ./e2e/ --config ./e2e/.chainsaw.yaml
+        run: go test ./test/e2e/ -v -tags e2e -timeout 10m
 
       - name: Collect logs on failure
         if: failure()

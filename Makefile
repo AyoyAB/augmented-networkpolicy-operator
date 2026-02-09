@@ -115,8 +115,8 @@ kind-load: docker-build ## Build and load docker image into Kind cluster.
 ##@ E2E Testing
 
 .PHONY: test-e2e
-test-e2e: kind-load deploy chainsaw ## Run e2e tests with chainsaw against a Kind cluster.
-	$(CHAINSAW) test --test-dir ./e2e/ --config ./e2e/.chainsaw.yaml
+test-e2e: kind-load deploy ## Run e2e tests against a Kind cluster.
+	go test ./test/e2e/ -v -tags e2e -timeout 10m
 
 ##@ Helm
 
@@ -159,14 +159,12 @@ KUSTOMIZE ?= $(LOCALBIN)/kustomize
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
 GOLANGCI_LINT ?= $(LOCALBIN)/golangci-lint
-CHAINSAW ?= $(LOCALBIN)/chainsaw
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.4.3
 CONTROLLER_TOOLS_VERSION ?= v0.16.5
 ENVTEST_VERSION ?= release-0.19
 GOLANGCI_LINT_VERSION ?= v1.64.8
-CHAINSAW_VERSION ?= v0.2.12
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
@@ -187,11 +185,6 @@ $(ENVTEST): $(LOCALBIN)
 golangci-lint: $(GOLANGCI_LINT) ## Download golangci-lint locally if necessary.
 $(GOLANGCI_LINT): $(LOCALBIN)
 	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/cmd/golangci-lint,$(GOLANGCI_LINT_VERSION))
-
-.PHONY: chainsaw
-chainsaw: $(CHAINSAW) ## Download chainsaw locally if necessary.
-$(CHAINSAW): $(LOCALBIN)
-	$(call go-install-tool,$(CHAINSAW),github.com/kyverno/chainsaw,$(CHAINSAW_VERSION))
 
 # go-install-tool will 'go install' any package with custom target and target version.
 # $1 - target path with name of binary
