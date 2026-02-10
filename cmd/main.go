@@ -21,6 +21,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -32,8 +33,10 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/certwatcher"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/metrics/filters"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	networkingv1alpha1 "github.com/AyoyAB/augmented-networkpolicy-operator/api/v1alpha1"
@@ -75,11 +78,14 @@ func main() {
 	var probeAddr string
 	var secureMetrics bool
 	var enableHTTP2 bool
+	var metricsCertDir string
+	var metricsCertName string
+	var metricsCertKey string
 	var ipBlacklist stringSliceFlag
 	var ipWhitelist stringSliceFlag
 	var blacklistSet bool
 
-	flag.StringVar(&metricsAddr, "metrics-bind-address", "0", "The address the metrics endpoint binds to. "+
+	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8443", "The address the metrics endpoint binds to. "+
 		"Use :8443 for HTTPS or :8080 for HTTP, or leave as 0 to disable metrics.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
@@ -89,6 +95,11 @@ func main() {
 		"If set, the metrics endpoint is served securely via HTTPS. Use --metrics-secure=false to use HTTP instead.")
 	flag.BoolVar(&enableHTTP2, "enable-http2", false,
 		"If set, HTTP/2 will be enabled for the metrics server")
+	flag.StringVar(&metricsCertDir, "metrics-cert-dir", "",
+		"The directory containing TLS certificates for the metrics server. "+
+			"If not set, self-signed certificates will be used.")
+	flag.StringVar(&metricsCertName, "metrics-cert-name", "tls.crt", "The name of the TLS certificate file.")
+	flag.StringVar(&metricsCertKey, "metrics-cert-key", "tls.key", "The name of the TLS private key file.")
 	flag.Var(&ipBlacklist, "ip-blacklist",
 		"CIDRs to block from resolved IPs (comma-separated, repeatable). "+
 			"Default: 169.254.169.254/32,127.0.0.0/8")
@@ -137,6 +148,27 @@ func main() {
 		TLSOpts:       tlsOpts,
 	}
 
+	if secureMetrics {
+		metricsOptions.FilterProvider = filters.WithAuthenticationAndAuthorization
+	}
+
+	// If TLS cert dir is provided, use it for the metrics server
+	var certWatcher *certwatcher.CertWatcher
+	if metricsCertDir != "" {
+		var err error
+		certWatcher, err = certwatcher.New(
+			filepath.Join(metricsCertDir, metricsCertName),
+			filepath.Join(metricsCertDir, metricsCertKey),
+		)
+		if err != nil {
+			setupLog.Error(err, "unable to create cert watcher")
+			os.Exit(1)
+		}
+		metricsOptions.TLSOpts = append(metricsOptions.TLSOpts, func(config *tls.Config) {
+			config.GetCertificate = certWatcher.GetCertificate
+		})
+	}
+
 	// Set up IP filter
 	ipFilter, err := dns.NewIPFilter([]string(ipWhitelist), []string(ipBlacklist))
 	if err != nil {
@@ -165,6 +197,14 @@ func main() {
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
+	}
+
+	// Add cert watcher to manager if it was created
+	if certWatcher != nil {
+		if err := mgr.Add(certWatcher); err != nil {
+			setupLog.Error(err, "unable to add cert watcher to manager")
+			os.Exit(1)
+		}
 	}
 
 	if err = (&controller.NetworkPolicyReconciler{

@@ -12,6 +12,6 @@ spec:
     control-plane: controller-manager
   ports:
     - name: metrics
-      port: 8080
+      port: 8443
       targetPort: metrics
       protocol: TCP

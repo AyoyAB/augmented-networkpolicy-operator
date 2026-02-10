@@ -12,6 +12,7 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -246,7 +247,8 @@ var _ = Describe("NetworkPolicy", Ordered, func() {
 		}, "60s", "2s").Should(Succeed())
 
 		// Check creation metric via curl pod
-		metricsURL := "http://augmented-networkpolicy-operator-controller-manager-metrics.augmented-networkpolicy-operator-system.svc:8080/metrics"
+		metricsURL := "https://augmented-networkpolicy-operator-controller-manager-metrics.augmented-networkpolicy-operator-system.svc:8443/metrics"
+		ensureMetricsSA(ctx)
 		assertMetric(ctx, "curl-metrics-create", metricsURL, "augmented_networkpolicy_creations_total")
 
 		// Delete the augmented NP
@@ -264,6 +266,44 @@ var _ = Describe("NetworkPolicy", Ordered, func() {
 	})
 })
 
+const metricsServiceAccount = "e2e-metrics-reader"
+
+// ensureMetricsSA creates a ServiceAccount and ClusterRoleBinding for reading metrics.
+func ensureMetricsSA(ctx context.Context) {
+	sa := &corev1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      metricsServiceAccount,
+			Namespace: testNamespace,
+		},
+	}
+	err := k8sClient.Get(ctx, types.NamespacedName{Name: sa.Name, Namespace: sa.Namespace}, sa)
+	if apierrors.IsNotFound(err) {
+		Expect(k8sClient.Create(ctx, sa)).To(Succeed())
+	}
+
+	crb := &rbacv1.ClusterRoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "e2e-metrics-reader-binding",
+		},
+		RoleRef: rbacv1.RoleRef{
+			APIGroup: rbacv1.GroupName,
+			Kind:     "ClusterRole",
+			Name:     "augmented-networkpolicy-operator-metrics-reader",
+		},
+		Subjects: []rbacv1.Subject{
+			{
+				Kind:      rbacv1.ServiceAccountKind,
+				Name:      metricsServiceAccount,
+				Namespace: testNamespace,
+			},
+		},
+	}
+	err = k8sClient.Get(ctx, types.NamespacedName{Name: crb.Name}, crb)
+	if apierrors.IsNotFound(err) {
+		Expect(k8sClient.Create(ctx, crb)).To(Succeed())
+	}
+}
+
 // assertMetric creates a curl pod to fetch metrics and asserts the given metric has a value >= 1.
 func assertMetric(ctx context.Context, podName, metricsURL, metricName string) {
 	// Clean up any previous pod with this name
@@ -276,19 +316,25 @@ func assertMetric(ctx context.Context, podName, metricsURL, metricName string) {
 		return apierrors.IsNotFound(err)
 	}, "30s", "2s").Should(BeTrue())
 
-	// Create the curl pod
+	tokenPath := "/var/run/secrets/kubernetes.io/serviceaccount/token"
+
+	// Create the curl pod with the metrics-reader service account
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      podName,
 			Namespace: testNamespace,
 		},
 		Spec: corev1.PodSpec{
-			RestartPolicy: corev1.RestartPolicyNever,
+			ServiceAccountName: metricsServiceAccount,
+			RestartPolicy:      corev1.RestartPolicyNever,
 			Containers: []corev1.Container{
 				{
-					Name:    "curl",
-					Image:   "curlimages/curl",
-					Command: []string{"curl", "-sf", metricsURL},
+					Name:  "curl",
+					Image: "curlimages/curl",
+					Command: []string{
+						"sh", "-c",
+						fmt.Sprintf("curl -sf -k -H \"Authorization: Bearer $(cat %s)\" %s", tokenPath, metricsURL),
+					},
 				},
 			},
 		},

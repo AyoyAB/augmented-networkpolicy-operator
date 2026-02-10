@@ -3,7 +3,7 @@
 IMG ?= ghcr.io/ayoyab/augmented-networkpolicy-operator:latest
 
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
-ENVTEST_K8S_VERSION = 1.31.0
+ENVTEST_K8S_VERSION ?= $(shell go list -m -f '{{.Version}}' k8s.io/api 2>/dev/null | sed 's/^v0\.\([0-9]*\)\..*/1.\1.x/')
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -46,6 +46,14 @@ vet: ## Run go vet against code.
 lint: golangci-lint ## Run golangci-lint linter.
 	$(GOLANGCI_LINT) run
 
+.PHONY: lint-fix
+lint-fix: golangci-lint ## Run golangci-lint and fix issues.
+	$(GOLANGCI_LINT) run --fix
+
+.PHONY: lint-config
+lint-config: golangci-lint ## Verify golangci-lint config.
+	$(GOLANGCI_LINT) config verify
+
 .PHONY: test
 test: manifests generate fmt vet envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN)/k8s -p path)" go test $$(go list ./... | grep -v /e2e) -coverprofile cover.out
@@ -62,16 +70,16 @@ run: manifests generate fmt vet ## Run a controller from your host.
 
 .PHONY: docker-build
 docker-build: ## Build docker image with the manager.
-	docker build --no-cache -t ${IMG} .
+	$(CONTAINER_TOOL) build --no-cache -t ${IMG} .
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
-	docker push ${IMG}
+	$(CONTAINER_TOOL) push ${IMG}
 
 .PHONY: docker-buildx
 docker-buildx: ## Build and push docker image for cross-platform support.
-	- docker buildx create --use
-	docker buildx build --push --platform linux/arm64,linux/amd64 --tag ${IMG} .
+	- $(CONTAINER_TOOL) buildx create --use
+	$(CONTAINER_TOOL) buildx build --push --platform linux/arm64,linux/amd64 --tag ${IMG} .
 
 ##@ Deployment
 
@@ -81,20 +89,20 @@ endif
 
 .PHONY: install
 install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/crd | kubectl apply -f -
+	$(KUSTOMIZE) build config/crd | $(KUBECTL) apply -f -
 
 .PHONY: uninstall
 uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/crd | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
+	$(KUSTOMIZE) build config/crd | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
 
 .PHONY: deploy
 deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default | kubectl apply -f -
+	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f -
 
 .PHONY: undeploy
 undeploy: kustomize ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/default | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
+	$(KUSTOMIZE) build config/default | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
 
 ##@ Kind
 
@@ -102,15 +110,15 @@ KIND_CLUSTER_NAME ?= augmented-networkpolicy-operator
 
 .PHONY: kind-create
 kind-create: ## Create a Kind cluster for development.
-	kind create cluster --name $(KIND_CLUSTER_NAME)
+	$(KIND) create cluster --name $(KIND_CLUSTER_NAME)
 
 .PHONY: kind-delete
 kind-delete: ## Delete the Kind cluster.
-	kind delete cluster --name $(KIND_CLUSTER_NAME)
+	$(KIND) delete cluster --name $(KIND_CLUSTER_NAME)
 
 .PHONY: kind-load
 kind-load: docker-build ## Build and load docker image into Kind cluster.
-	kind load docker-image ${IMG} --name $(KIND_CLUSTER_NAME)
+	$(KIND) load docker-image ${IMG} --name $(KIND_CLUSTER_NAME)
 
 ##@ E2E Testing
 
@@ -155,6 +163,8 @@ $(LOCALBIN):
 
 ## Tool Binaries
 KUBECTL ?= kubectl
+CONTAINER_TOOL ?= docker
+KIND ?= kind
 KUSTOMIZE ?= $(LOCALBIN)/kustomize
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
@@ -180,6 +190,10 @@ $(CONTROLLER_GEN): $(LOCALBIN)
 envtest: $(ENVTEST) ## Download setup-envtest locally if necessary.
 $(ENVTEST): $(LOCALBIN)
 	$(call go-install-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest,$(ENVTEST_VERSION))
+
+.PHONY: setup-envtest
+setup-envtest: envtest ## Download envtest binaries locally.
+	$(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN)
 
 .PHONY: golangci-lint
 golangci-lint: $(GOLANGCI_LINT) ## Download golangci-lint locally if necessary.

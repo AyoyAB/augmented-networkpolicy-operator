@@ -38,8 +38,6 @@ spec:
         args:
         - --leader-elect
         - --health-probe-bind-address=:8081
-        - --metrics-bind-address=:8080
-        - --metrics-secure=false
         image: controller:latest
         imagePullPolicy: IfNotPresent
         name: manager
@@ -48,8 +46,11 @@ spec:
           capabilities:
             drop:
             - "ALL"
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
         ports:
-        - containerPort: 8080
+        - containerPort: 8443
           name: metrics
           protocol: TCP
         - containerPort: 8081
@@ -74,5 +75,8 @@ spec:
           requests:
             cpu: 10m
             memory: 64Mi
+      volumes:
+      - name: tmp
+        emptyDir: {}
       serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10
